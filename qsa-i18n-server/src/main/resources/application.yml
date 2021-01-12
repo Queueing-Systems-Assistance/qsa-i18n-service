@@ -1,0 +1,45 @@
+# Spring Metrics
+management:
+  endpoints:
+    enabled-by-default: false
+    web:
+      exposure:
+        include: info,health,prometheus
+  metrics:
+    tags:
+      application: QSA.${spring.application.name}.${spring.profiles.active}
+    enabled: >
+      jvm.memory.used,
+      jvm.memory.max,
+      process.uptime,
+      process.cpu.usage,
+      http.server.requests
+  endpoint:
+    prometheus:
+      enabled: true
+    info:
+      enabled: true
+    health:
+      enabled: true
+
+# Spring Application
+spring:
+  main:
+    banner-mode: "off"
+  mvc:
+    throw-exception-if-no-handler-found: true
+    servlet:
+      load-on-startup: 1
+  application:
+    name: i18n-service
+  profiles:
+    active: dev
+  web:
+    resources:
+      add-mappings: false
+    locale-resolver: accept_header
+
+# AWS credentials
+#aws:
+#  access-key-id:
+#  secret-access-key:

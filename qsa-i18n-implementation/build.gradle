@@ -1,0 +1,13 @@
+dependencies {
+  /* PROJECT */
+  implementation project(':qsa-i18n-domain')
+  /* DEPENDENCY */
+  implementation 'org.slf4j:slf4j-api'
+  implementation 'org.springframework:spring-context'
+  implementation 'com.amazonaws:aws-java-sdk-dynamodb'
+  /* TEST */
+  testImplementation 'org.mockito:mockito-core'
+  testImplementation 'org.testng:testng'
+}
+
+description = 'qsa-i18n-implementation'

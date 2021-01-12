@@ -1,0 +1,5 @@
+dependencies {
+  implementation 'com.amazonaws:aws-java-sdk-dynamodb'
+}
+
+description = 'qsa-i18n-domain'
