@@ -1,0 +1,5 @@
+rootProject.name = 'qsa-i18n-service'
+
+include(':qsa-i18n-domain')
+include(':qsa-i18n-implementation')
+include(':qsa-i18n-server')
