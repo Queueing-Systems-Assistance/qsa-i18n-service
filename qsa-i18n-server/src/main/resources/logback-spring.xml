@@ -1,21 +1,18 @@
 <configuration>
 
-  <conversionRule conversionWord="qsa_exception_converter" converterClass="com.unideb.qsa.i18n.server.logging.QsaExceptionDataConverter" />
-
   <springProfile name="dev">
 
     <appender name="CONSOLE_DEFAULT" class="ch.qos.logback.core.ConsoleAppender">
       <layout class="ch.qos.logback.classic.PatternLayout">
-        <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSS} %-5p %X{version:-NO_VERSION_SET} [requestId=%X{requestId:-NO_REQUEST}] %c - %msg%n%qsa_exception_converter{}</pattern>
+        <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5p) %green(%X{version:-NO_VERSION_SET} [requestId=%X{requestId:-NO_REQUEST}]) %cyan(%c) - %msg%n</pattern>
       </layout>
     </appender>
 
     <logger name="org" level="WARN" />
     <logger name="com" level="WARN" />
     <logger name="com.unideb.qsa.i18n" level="INFO" />
-    <logger name="org.springframework.web.servlet.PageNotFound" level="OFF" />
 
-    <root level="info">
+    <root level="INFO">
       <appender-ref ref="CONSOLE_DEFAULT" />
     </root>
   </springProfile>
@@ -31,7 +28,7 @@
 		"class": "%c",
 		"requestId": "%X{requestId:-NO_REQUEST}",
 		"message": "%m",
-		"exception": "%qsa_exception_converter{}"
+		"exception": "%ex"
 		}
 		' />
 
@@ -59,7 +56,7 @@
     <logger name="com" level="WARN" />
     <logger name="com.unideb.qsa.i18n" level="INFO" />
 
-    <root level="info">
+    <root level="INFO">
       <appender-ref ref="CONSOLE_JSON" />
       <appender-ref ref="LOGSTASH" />
     </root>

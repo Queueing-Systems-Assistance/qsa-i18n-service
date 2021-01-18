@@ -5,6 +5,8 @@ import static org.mockito.MockitoAnnotations.openMocks;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
+import java.util.List;
+
 import org.mockito.Mock;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -22,6 +24,8 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 
+import com.unideb.qsa.i18n.domain.I18nElement;
+import com.unideb.qsa.i18n.domain.exception.QSABatchUpdateException;
 import com.unideb.qsa.i18n.domain.exception.QSAClientException;
 
 /**
@@ -31,7 +35,10 @@ public class ExceptionHandlingAdviceTest {
 
     private static final int EXPECTED_LOG_LIST_SIZE = 1;
     private static final String ERROR_MESSAGE = "Internal Exception occurred";
+    private static final String ERROR_MESSAGE_BATCH_UPDATE = "Failed to batch update, keys";
+    private static final List<I18nElement> I18N_ELEMENTS = List.of(new I18nElement("simple.key"));
     private static final Void EMPTY_BODY = null;
+    private static final RuntimeException BATCH_EXCEPTION = new RuntimeException("Test Batch Exception");
 
     private final ExceptionHandlingAdvice exceptionHandlingAdvice = new ExceptionHandlingAdvice();
     private ListAppender<ILoggingEvent> listAppender;
@@ -61,6 +68,20 @@ public class ExceptionHandlingAdviceTest {
         assertEquals(listAppender.list.size(), EXPECTED_LOG_LIST_SIZE);
         assertEquals(listAppender.list.get(0).getLevel(), Level.ERROR);
         assertTrue(listAppender.list.get(0).getFormattedMessage().contains(ERROR_MESSAGE));
+    }
+
+    @Test
+    public void handleBatchUpdateException() {
+        // GIVEN
+        var expected = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(EMPTY_BODY);
+        var exception = new QSABatchUpdateException(I18N_ELEMENTS, List.of(BATCH_EXCEPTION));
+        // WHEN
+        var actual = exceptionHandlingAdvice.handleBatchUpdateException(exception);
+        // THEN
+        assertEquals(actual, expected);
+        assertEquals(listAppender.list.size(), EXPECTED_LOG_LIST_SIZE);
+        assertEquals(listAppender.list.get(0).getLevel(), Level.ERROR);
+        assertTrue(listAppender.list.get(0).getFormattedMessage().contains(ERROR_MESSAGE_BATCH_UPDATE));
     }
 
     @Test
