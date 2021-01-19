@@ -1,4 +1,4 @@
-# QSA I18n Service [![Build Status](https://travis-ci.com/Queueing-Systems-Assistance/qsa-i18n-service.svg?branch=master)](https://travis-ci.com/Queueing-Systems-Assistance/qsa-i18n-service)
+# QSA I18n Service ![CircleCI](https://img.shields.io/circleci/build/github/Queueing-Systems-Assistance/qsa-i18n-service/master)
 
 ### Project description
 
