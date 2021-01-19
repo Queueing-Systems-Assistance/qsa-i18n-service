@@ -8,7 +8,6 @@ import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.cache.CacheManager;
@@ -38,6 +37,8 @@ public class ServerConfig {
     private static final Logger LOG = LoggerFactory.getLogger(ServerConfig.class);
     private static final int REFRESH_RATE = 1000 * 60 * 60 * 12;
 
+    private final BuildProperties buildProperties;
+
     @Value("${management.metrics.enabled}")
     private String[] enabledMetrics;
     @Value("${aws.access-key-id}")
@@ -45,8 +46,9 @@ public class ServerConfig {
     @Value("${aws.secret-access-key}")
     private String awsSecretAccessKey;
 
-    @Autowired
-    private BuildProperties buildProperties;
+    public ServerConfig(BuildProperties buildProperties) {
+        this.buildProperties = buildProperties;
+    }
 
     @Bean(name = "i18nKeys")
     public CacheManager cacheManager() {

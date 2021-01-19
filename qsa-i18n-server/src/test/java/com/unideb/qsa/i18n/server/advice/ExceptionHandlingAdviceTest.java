@@ -27,6 +27,7 @@ import ch.qos.logback.core.read.ListAppender;
 import com.unideb.qsa.i18n.domain.I18nElement;
 import com.unideb.qsa.i18n.domain.exception.QSABatchUpdateException;
 import com.unideb.qsa.i18n.domain.exception.QSAClientException;
+import com.unideb.qsa.i18n.domain.exception.QSAInvalidTokenException;
 
 /**
  * Unit tests for {@link ExceptionHandlingAdvice}.
@@ -36,6 +37,7 @@ public class ExceptionHandlingAdviceTest {
     private static final int EXPECTED_LOG_LIST_SIZE = 1;
     private static final String ERROR_MESSAGE = "Internal Exception occurred";
     private static final String ERROR_MESSAGE_BATCH_UPDATE = "Failed to batch update, keys";
+    private static final String ERROR_MESSAGE_INVALID_TOKEN = "Given [X-QSA-Token] token is not valid!";
     private static final List<I18nElement> I18N_ELEMENTS = List.of(new I18nElement("simple.key"));
     private static final Void EMPTY_BODY = null;
     private static final RuntimeException BATCH_EXCEPTION = new RuntimeException("Test Batch Exception");
@@ -55,6 +57,19 @@ public class ExceptionHandlingAdviceTest {
         listAppender = new ListAppender<>();
         listAppender.start();
         logger.addAppender(listAppender);
+    }
+
+    @Test
+    public void handleInvalidTokenException() {
+        // GIVEN
+        var expected = ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(EMPTY_BODY);
+        // WHEN
+        var actual = exceptionHandlingAdvice.handleInvalidTokenException(new QSAInvalidTokenException(ERROR_MESSAGE_INVALID_TOKEN));
+        // THEN
+        assertEquals(actual, expected);
+        assertEquals(listAppender.list.size(), EXPECTED_LOG_LIST_SIZE);
+        assertEquals(listAppender.list.get(0).getLevel(), Level.ERROR);
+        assertTrue(listAppender.list.get(0).getFormattedMessage().contains(ERROR_MESSAGE_INVALID_TOKEN));
     }
 
     @Test

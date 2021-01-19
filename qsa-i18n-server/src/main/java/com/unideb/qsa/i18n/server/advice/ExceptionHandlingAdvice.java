@@ -15,6 +15,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import com.unideb.qsa.i18n.domain.exception.QSABatchUpdateException;
 import com.unideb.qsa.i18n.domain.exception.QSAClientException;
+import com.unideb.qsa.i18n.domain.exception.QSAInvalidTokenException;
 
 /**
  * Advice for exceptions, errors.
@@ -47,6 +48,17 @@ public class ExceptionHandlingAdvice extends ResponseEntityExceptionHandler {
     public ResponseEntity<Void> handleBatchUpdateException(QSABatchUpdateException exception) {
         LOG.error(String.format(ERROR_FAILED_TO_BATCH_UPDATE, exception.getI18nElements(), exception.getFailedBatchExceptions()));
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(EMPTY_BODY);
+    }
+
+    /**
+     * Exception handler for {@link QSAInvalidTokenException}.
+     * @param exception the exception
+     * @return Empty response with {@link HttpStatus#UNAUTHORIZED} code
+     */
+    @ExceptionHandler(QSAInvalidTokenException.class)
+    public ResponseEntity<Void> handleInvalidTokenException(QSAInvalidTokenException exception) {
+        LOG.error(exception.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(EMPTY_BODY);
     }
 
     /**

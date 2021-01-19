@@ -7,9 +7,13 @@ This service is responsible for retrieving i18n keys from the AWS. To use the se
 aws:
   access-key-id: YOUR_KEY_ID
   secret-access-key: YOUR_ACCESS_KEY
+qsa:
+  token: YOUR_TOKEN
 ```
 
 ### Endpoints
+
+- For tracking set the `X-Request-Id` header value
 
 #### /keys
 
@@ -42,6 +46,7 @@ aws:
 
 #### /keys/update
 - Accepts only POST requests
+- Need a `X-QSA-Token` header value
 - Need a JSON body (example):
 ```json
 [
@@ -58,10 +63,11 @@ aws:
 ### Errors
 
 - If anything goes wrong, this is the response:
-  - `422` - UNPROCESSABLE_ENTITY: requested key(s) not found. Check if they are available in the database
-  - `406` - NOT_ACCEPTABLE: HTTP body not valid JSON
+  - `401` - UNAUTHORIZED: if the `X-QSA-Token` header value is not valid
   - `404` - NOT_FOUND: wrong endpoint
   - `405` - METHOD_NOT_ALLOWED: wrong HTTP method
+  - `406` - NOT_ACCEPTABLE: HTTP body not valid JSON
+  - `422` - UNPROCESSABLE_ENTITY: requested key(s) not found. Check if they are available in the database
   - `500` - INTERNAL_SERVER_ERROR: any other error during the request processing (except `422`)
 
 Other than that, there is a cache: every key cached 12 hours by default. If a key returns a null value (so the response code will be a `422`) it's not cached.

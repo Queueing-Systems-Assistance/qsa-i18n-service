@@ -43,3 +43,7 @@ spring:
 #aws:
 #  access-key-id:
 #  secret-access-key:
+
+# QSA
+#qsa:
+#  token:
