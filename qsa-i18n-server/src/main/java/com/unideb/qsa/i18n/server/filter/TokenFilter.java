@@ -61,6 +61,6 @@ public class TokenFilter extends OncePerRequestFilter {
     }
 
     private boolean shouldValidateEndpoint(HttpServletRequest request) {
-        return request.getRequestURI().equals(ENDPOINT);
+        return request.getRequestURI().contains(ENDPOINT);
     }
 }
