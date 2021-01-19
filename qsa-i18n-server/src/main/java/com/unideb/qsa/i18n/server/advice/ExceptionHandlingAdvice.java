@@ -13,7 +13,9 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import com.unideb.qsa.i18n.domain.exception.QSABatchUpdateException;
 import com.unideb.qsa.i18n.domain.exception.QSAClientException;
+import com.unideb.qsa.i18n.domain.exception.QSAInvalidTokenException;
 
 /**
  * Advice for exceptions, errors.
@@ -21,6 +23,7 @@ import com.unideb.qsa.i18n.domain.exception.QSAClientException;
 @ControllerAdvice
 public class ExceptionHandlingAdvice extends ResponseEntityExceptionHandler {
 
+    public static final String ERROR_FAILED_TO_BATCH_UPDATE = "Failed to batch update, keys: %s, exceptions: %s";
     private static final Logger LOG = LoggerFactory.getLogger(ExceptionHandlingAdvice.class);
     private static final String EXCEPTION_OCCURRED_INTERNAL = "Internal Exception occurred";
     private static final Void EMPTY_BODY = null;
@@ -34,6 +37,28 @@ public class ExceptionHandlingAdvice extends ResponseEntityExceptionHandler {
     public ResponseEntity<Void> handleInternalException(Exception exception) {
         LOG.error(EXCEPTION_OCCURRED_INTERNAL, exception);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(EMPTY_BODY);
+    }
+
+    /**
+     * Exception handler for {@link QSABatchUpdateException}.
+     * @param exception the exception
+     * @return Empty response with {@link HttpStatus#INTERNAL_SERVER_ERROR} code
+     */
+    @ExceptionHandler(QSABatchUpdateException.class)
+    public ResponseEntity<Void> handleBatchUpdateException(QSABatchUpdateException exception) {
+        LOG.error(String.format(ERROR_FAILED_TO_BATCH_UPDATE, exception.getI18nElements(), exception.getFailedBatchExceptions()));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(EMPTY_BODY);
+    }
+
+    /**
+     * Exception handler for {@link QSAInvalidTokenException}.
+     * @param exception the exception
+     * @return Empty response with {@link HttpStatus#UNAUTHORIZED} code
+     */
+    @ExceptionHandler(QSAInvalidTokenException.class)
+    public ResponseEntity<Void> handleInvalidTokenException(QSAInvalidTokenException exception) {
+        LOG.error(exception.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(EMPTY_BODY);
     }
 
     /**
