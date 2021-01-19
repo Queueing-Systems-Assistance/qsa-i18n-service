@@ -22,7 +22,7 @@ import com.unideb.qsa.i18n.domain.exception.QSAInvalidTokenException;
 /**
  * Filter for validating token in the header.
  */
-@Profile(value = "dev")
+@Profile(value = "lab")
 @Order(3)
 @Component
 public class TokenFilter extends OncePerRequestFilter {
@@ -45,7 +45,7 @@ public class TokenFilter extends OncePerRequestFilter {
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
-        if (isValidEndpoint(request)) {
+        if (shouldValidateEndpoint(request)) {
             validateToken(request, response, filterChain);
         } else {
             super.doFilter(request, response, filterChain);
@@ -60,7 +60,7 @@ public class TokenFilter extends OncePerRequestFilter {
         }
     }
 
-    private boolean isValidEndpoint(HttpServletRequest request) {
+    private boolean shouldValidateEndpoint(HttpServletRequest request) {
         return request.getRequestURI().contains(ENDPOINT);
     }
 }
