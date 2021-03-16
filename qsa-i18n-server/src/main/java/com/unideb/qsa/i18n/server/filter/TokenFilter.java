@@ -22,7 +22,7 @@ import com.unideb.qsa.i18n.domain.exception.QSAInvalidTokenException;
 /**
  * Filter for validating token in the header.
  */
-@Profile(value = "lab")
+@Profile(value = "!dev")
 @Order(3)
 @Component
 public class TokenFilter extends OncePerRequestFilter {
