@@ -99,6 +99,7 @@ workflows:
   workflow:
     jobs:
       - build:
+          name: Build
           context:
             - Secrets
           filters:
@@ -111,10 +112,15 @@ workflows:
                 scan_commit_body: true
                 job_type: build
                 token_name: CIRCLE_CI_ARTIFACTS
-      - deploy-test:
+      - deploy-lab-hold:
+          name: Deploy Test (HOLD)
           requires:
             - build
           type: approval
+      - deploy-lab:
+          name: Deploy Test
+          requires:
+            - deploy-lab-hold
           context:
             - Secrets
           filters:
@@ -128,3 +134,8 @@ workflows:
                 job_type: deployment
                 environment_type: lab
                 token_name: CIRCLE_CI_ARTIFACTS
+      - deploy-prod-hold:
+          name: Deploy Prod (HOLD)
+          requires:
+            - deploy-lab-hold
+          type: approval
