@@ -74,7 +74,7 @@ jobs:
             git config --global user.name "Circle CI"
             git tag -a -f "${RELEASE_VERSION}" -m "${RELEASE_VERSION}"
             git push -f "https://${GITHUB_TOKEN}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}" refs/tags/"${RELEASE_VERSION}"
-  deploy-test:
+  deploy-lab:
     executor: aws-cli/default
     steps:
       - aws-cli/install
@@ -96,10 +96,9 @@ jobs:
             aws lambda update-function-code --region eu-central-1 --function-name qsa-i18n-updater --zip-file fileb://./qsa-i18n-updater/build/distributions/qsa-i18n-updater-RELEASE.VERSION.UNKNOWN.zip
 workflows:
   version: 2
-  workflow:
+  default-pipeline:
     jobs:
       - build:
-          name: Build
           context:
             - Secrets
           filters:
@@ -112,15 +111,13 @@ workflows:
                 scan_commit_body: true
                 job_type: build
                 token_name: CIRCLE_CI_ARTIFACTS
-      - deploy-lab-hold:
-          name: Deploy Test (HOLD)
+      - deploy-hold-lab:
           requires:
             - build
           type: approval
       - deploy-lab:
-          name: Deploy Test
           requires:
-            - deploy-lab-hold
+            - deploy-hold-lab
           context:
             - Secrets
           filters:
@@ -132,10 +129,9 @@ workflows:
             - jira/notify:
                 scan_commit_body: true
                 job_type: deployment
-                environment_type: lab
+                environment_type: staging
                 token_name: CIRCLE_CI_ARTIFACTS
-      - deploy-prod-hold:
-          name: Deploy Prod (HOLD)
+      - deploy-hold-prod:
           requires:
-            - deploy-lab-hold
+            - deploy-lab
           type: approval
