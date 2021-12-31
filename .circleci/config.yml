@@ -23,7 +23,6 @@ commands:
             echo "export RELEASE_VERSION=${RELEASE_VERSION}" >> "$BASH_ENV"
             mkdir -p envs 
             echo "${RELEASE_VERSION}" > envs/release-version
-            cat envs/release-version
             chmod +x gradlew
 jobs:
   build:
@@ -86,14 +85,15 @@ jobs:
           command: |
             RELEASE_VERSION=$(cat envs/release-version)
             echo "export RELEASE_VERSION=${RELEASE_VERSION}" >> "$BASH_ENV"
+            cat envs/release-version
       - run:
           name: Upload i18n retriever
           command: |
-            aws lambda update-function-code --region eu-central-1 --function-name qsa-i18n-retriever --zip-file fileb://./qsa-i18n-retriever/build/distributions/qsa-i18n-retriever-RELEASE.VERSION.UNKNOWN.zip
+            aws lambda update-function-code --region eu-central-1 --function-name qsa-i18n-retriever --zip-file fileb://qsa-i18n-retriever/build/distributions/qsa-i18n-retriever-${RELEASE_VERSION}.zip
       - run:
           name: Upload i18n updater
           command: |
-            aws lambda update-function-code --region eu-central-1 --function-name qsa-i18n-updater --zip-file fileb://./qsa-i18n-updater/build/distributions/qsa-i18n-updater-RELEASE.VERSION.UNKNOWN.zip
+            aws lambda update-function-code --region eu-central-1 --function-name qsa-i18n-updater --zip-file fileb://qsa-i18n-updater/build/distributions/qsa-i18n-updater-${RELEASE_VERSION}.zip
 workflows:
   version: 2
   default-pipeline:
