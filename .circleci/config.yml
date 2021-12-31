@@ -23,6 +23,7 @@ commands:
             echo "export RELEASE_VERSION=${RELEASE_VERSION}" >> "$BASH_ENV"
             mkdir -p envs 
             echo "${RELEASE_VERSION}" > envs/release-version
+            cat envs/release-version
             chmod +x gradlew
 jobs:
   build:
@@ -77,14 +78,13 @@ jobs:
   deploy-lab:
     executor: aws-cli/default
     steps:
-      - aws-cli/install
       - aws-cli/setup
       - attach_workspace:
           at: ./
       - run:
           name: Environment Setup
           command: |
-            RELEASE_VERSION=$(cat /envs/release-version)
+            RELEASE_VERSION=$(cat envs/release-version)
             echo "export RELEASE_VERSION=${RELEASE_VERSION}" >> "$BASH_ENV"
       - run:
           name: Upload i18n retriever
