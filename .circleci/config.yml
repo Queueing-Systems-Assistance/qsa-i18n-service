@@ -146,6 +146,10 @@ workflows:
           requires:
             - deploy-lab
           type: approval
+          filters:
+            branches:
+              only:
+                - /^master/
       - deploy-prod:
           requires:
             - deploy-hold-prod
@@ -155,7 +159,6 @@ workflows:
             branches:
               only:
                 - /^master/
-                - /^feature\/QSA-[0-9]+/
           post-steps:
             - jira/notify:
                 scan_commit_body: true
