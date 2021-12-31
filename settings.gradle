@@ -1,5 +1,27 @@
 rootProject.name = 'qsa-i18n-service'
 
+enableFeaturePreview('VERSION_CATALOGS')
+
+dependencyResolutionManagement {
+  repositories {
+    mavenCentral()
+    maven {
+      url 'https://jitpack.io'
+    }
+  }
+  versionCatalogs {
+    libs {
+      version('checkstyle', '9.2')
+      alias('aws-java-sdk-dynamodb').to('com.amazonaws:aws-java-sdk-dynamodb:1.12.131')
+      alias('aws-lambda-java-events').to('com.amazonaws:aws-lambda-java-events:3.11.0')
+      alias('aws-lambda-java-core').to('com.amazonaws:aws-lambda-java-core:1.2.1')
+      alias('mockito-core').to('org.mockito:mockito-core:4.2.0')
+      alias('testng').to('org.testng:testng:7.4.0')
+    }
+  }
+}
+
 include(':qsa-i18n-domain')
-include(':qsa-i18n-implementation')
-include(':qsa-i18n-server')
+include(':qsa-i18n-retriever')
+include(':qsa-i18n-updater')
+

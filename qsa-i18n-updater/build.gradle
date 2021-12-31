@@ -1,0 +1,13 @@
+dependencies {
+  /* PROJECT */
+  implementation project(':qsa-i18n-domain')
+  /* AWS */
+  implementation libs.aws.java.sdk.dynamodb
+  implementation libs.aws.lambda.java.core
+  compileOnly libs.aws.lambda.java.events
+  /* TEST */
+  testImplementation libs.mockito.core
+  testImplementation libs.testng
+}
+
+description = 'qsa-i18n-updater'

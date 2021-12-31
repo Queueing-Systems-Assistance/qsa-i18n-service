@@ -1,0 +1,32 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="[Local] Update I18n Keys" type="aws.lambda" factoryName="Local">
+    <option name="credentialProviderId" value="profile:default" />
+    <option name="regionId" value="eu-central-1" />
+    <option name="debugHost" value="localhost" />
+    <option name="environmentVariables">
+      <map />
+    </option>
+    <option name="handler" value="com.unideb.qsa.i18n.updater.EventHandler" />
+    <option name="image" value="false" />
+    <option name="logicalFunctionName" />
+    <option name="memorySize" value="512" />
+    <option name="pathMappings">
+      <list />
+    </option>
+    <option name="platform" />
+    <option name="runtime" value="java11" />
+    <option name="templateFile" />
+    <option name="timeout" value="15" />
+    <option name="useTemplate" value="false" />
+    <option name="input" value="[&#10;  {&#10;    &quot;key&quot;: &quot;test.formula&quot;,&#10;    &quot;value&quot;: {&#10;    &quot;en_US&quot;: &quot;$\\rho = \\frac{\\lambda}{\\mu}Testing$&quot;,&#10;    &quot;hu_HU&quot;: &quot;&quot;&#10;    }&#10;  }&#10;]" />
+    <option name="inputIsFile" value="false" />
+    <sam>
+      <option name="additionalBuildArgs" value="" />
+      <option name="additionalLocalArgs" value="" />
+      <option name="buildInContainer" value="false" />
+      <option name="dockerNetwork" value="" />
+      <option name="skipImagePull" value="false" />
+    </sam>
+    <method v="2" />
+  </configuration>
+</component>

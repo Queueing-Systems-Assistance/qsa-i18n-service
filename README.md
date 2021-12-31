@@ -2,30 +2,20 @@
 
 ### Project description
 
-This service is responsible for retrieving i18n keys from the AWS. To use the service, please provide the following values in the `application.yml` file:
-```yaml
-aws:
-  access-key-id: YOUR_KEY_ID
-  secret-access-key: YOUR_ACCESS_KEY
-qsa:
-  token: YOUR_TOKEN
-```
+This service is responsible for retrieving i18n keys from AWS DynamoDB. To use the service, install the AWS CLI and configure the default profile with the secret key and id.
 
-### Endpoints
+### Functions
 
-- For tracking set the `X-Request-Id` header value
+#### I18n Retriever
 
-#### /keys
-
-- Accepts only POST requests
-- Need a JSON body (example):
+- Need a JSON input (example):
 ```json
 [
     "system.element.MM2.name",
     "system.element.MM1.description"
 ]
 ```
-- Response (example):
+- Output (example):
 ```json
 [
     {
@@ -44,10 +34,9 @@ qsa:
 ]
 ```
 
-#### /keys/update
-- Accepts only POST requests
-- Need a `X-QSA-Token` header value
-- Need a JSON body (example):
+#### I18n Updater
+
+- Need a JSON input (example):
 ```json
 [
     {
@@ -58,18 +47,13 @@ qsa:
     }
 ]
 ```
-- Response: empty body, with 200 HTTP status code
+- Output: the updated i18n keys in a list (example):
+```json
+[
+    "example.key"
+]
+```
 
 ### Errors
 
-- If anything goes wrong, this is the response:
-  - `401` - UNAUTHORIZED: if the `X-QSA-Token` header value is not valid
-  - `404` - NOT_FOUND: wrong endpoint
-  - `405` - METHOD_NOT_ALLOWED: wrong HTTP method
-  - `406` - NOT_ACCEPTABLE: HTTP body not valid JSON
-  - `422` - UNPROCESSABLE_ENTITY: requested key(s) not found. Check if they are available in the database
-  - `500` - INTERNAL_SERVER_ERROR: any other error during the request processing (except `422`)
-
-Other than that, there is a cache: every key cached 12 hours by default. If a key returns a null value (so the response code will be a `422`) it's not cached.
-
-Every time, the application will retrieve all the requested keys with their locales or an error thrown. 
+- If anything goes wrong, this is the response the result will contain the error message, which is informative and should **never** be sent out to the user

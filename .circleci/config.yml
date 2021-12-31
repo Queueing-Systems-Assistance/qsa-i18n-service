@@ -1,6 +1,7 @@
 version: 2.1
 orbs:
   jira: circleci/jira@1.3.0
+  aws-cli: circleci/aws-cli@2.0
 
 commands:
   set_local_environment:
@@ -20,7 +21,27 @@ commands:
             echo "RELEASE_VERSION" "${RELEASE_VERSION}"
             echo "export BRANCH_NAME=${BRANCH_NAME}" >> "$BASH_ENV"
             echo "export RELEASE_VERSION=${RELEASE_VERSION}" >> "$BASH_ENV"
+            mkdir -p envs 
+            echo "${RELEASE_VERSION}" > envs/release-version
             chmod +x gradlew
+  deploy:
+    steps:
+      - aws-cli/setup
+      - attach_workspace:
+          at: ./
+      - run:
+          name: Environment Setup
+          command: |
+            RELEASE_VERSION=$(cat envs/release-version)
+            echo "export RELEASE_VERSION=${RELEASE_VERSION}" >> "$BASH_ENV"
+      - run:
+          name: Upload i18n retriever
+          command: |
+            aws lambda update-function-code --region eu-central-1 --function-name qsa-${AWS_ENVIRONMENT}-i18n-retriever --zip-file fileb://qsa-i18n-retriever/build/distributions/qsa-i18n-retriever-${RELEASE_VERSION}.zip
+      - run:
+          name: Upload i18n updater
+          command: |
+            aws lambda update-function-code --region eu-central-1 --function-name qsa-${AWS_ENVIRONMENT}-i18n-updater --zip-file fileb://qsa-i18n-updater/build/distributions/qsa-i18n-updater-${RELEASE_VERSION}.zip
 jobs:
   build:
     environment:
@@ -57,16 +78,13 @@ jobs:
       - run:
           name: Build
           command: |
-            ./gradlew -x test -x checkstyleMain -x checkstyleTest build -Prelease.version="${RELEASE_VERSION}"
-      - setup_remote_docker
-      - run:
-          name: Docker
-          command: |
-            echo "${DOCKER_GITHUB_PASSWORD}" | docker login docker.pkg.github.com -u "${DOCKER_GITHUB_USERNAME}" --password-stdin
-            docker build \
-              -f ./support/docker/Dockerfile \
-              -t docker.pkg.github.com/queueing-systems-assistance/qsa-i18n-service/qsa-i18n-service:"${RELEASE_VERSION}" .
-            docker push docker.pkg.github.com/queueing-systems-assistance/qsa-i18n-service/qsa-i18n-service:"${RELEASE_VERSION}"
+            ./gradlew -x test -x checkstyleMain -x checkstyleTest build buildZip -Prelease.version="${RELEASE_VERSION}"
+      - persist_to_workspace:
+          root: .
+          paths:
+            - qsa-i18n-retriever/build/distributions/
+            - qsa-i18n-updater/build/distributions/
+            - envs/release-version
       - run:
           name: Git Tagging
           command: |
@@ -74,10 +92,22 @@ jobs:
             git config --global user.name "Circle CI"
             git tag -a -f "${RELEASE_VERSION}" -m "${RELEASE_VERSION}"
             git push -f "https://${GITHUB_TOKEN}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}" refs/tags/"${RELEASE_VERSION}"
+  deploy-lab:
+    executor: aws-cli/default
+    environment:
+      AWS_ENVIRONMENT: lab
+    steps:
+      - deploy
+  deploy-prod:
+    executor: aws-cli/default
+    environment:
+      AWS_ENVIRONMENT: prod
+    steps:
+      - deploy
 
 workflows:
   version: 2
-  workflow:
+  default-pipeline:
     jobs:
       - build:
           context:
@@ -91,4 +121,47 @@ workflows:
             - jira/notify:
                 scan_commit_body: true
                 job_type: build
+                token_name: CIRCLE_CI_ARTIFACTS
+      - deploy-hold-lab:
+          requires:
+            - build
+          type: approval
+      - deploy-lab:
+          requires:
+            - deploy-hold-lab
+          context:
+            - Secrets
+          filters:
+            branches:
+              only:
+                - /^master/
+                - /^feature\/QSA-[0-9]+/
+          post-steps:
+            - jira/notify:
+                scan_commit_body: true
+                job_type: deployment
+                environment_type: staging
+                token_name: CIRCLE_CI_ARTIFACTS
+      - deploy-hold-prod:
+          requires:
+            - deploy-lab
+          type: approval
+          filters:
+            branches:
+              only:
+                - /^master/
+      - deploy-prod:
+          requires:
+            - deploy-hold-prod
+          context:
+            - Secrets
+          filters:
+            branches:
+              only:
+                - /^master/
+          post-steps:
+            - jira/notify:
+                scan_commit_body: true
+                job_type: deployment
+                environment_type: production
                 token_name: CIRCLE_CI_ARTIFACTS
