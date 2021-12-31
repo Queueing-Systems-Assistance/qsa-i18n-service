@@ -22,7 +22,7 @@ commands:
             echo "export BRANCH_NAME=${BRANCH_NAME}" >> "$BASH_ENV"
             echo "export RELEASE_VERSION=${RELEASE_VERSION}" >> "$BASH_ENV"
             mkdir -p envs 
-            echo ${RELEASE_VERSION}" > envs/release-version
+            echo "${RELEASE_VERSION}" > envs/release-version
             chmod +x gradlew
 jobs:
   build:
