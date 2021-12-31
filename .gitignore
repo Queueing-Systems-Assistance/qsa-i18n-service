@@ -13,3 +13,5 @@ classes/
 # Application downloaded resources
 /resources/**
 **/logs/**
+# AWS
+**/.aws-sam

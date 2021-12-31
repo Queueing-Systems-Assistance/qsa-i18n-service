@@ -44,7 +44,7 @@ public class I18nElement {
     @Override
     public String toString() {
         return "I18nElement{"
-               + "key='" + key + "'''"
+               + "key='" + key + "'"
                + ", value=" + value
                + "}";
     }

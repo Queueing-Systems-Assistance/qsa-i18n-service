@@ -1,73 +1,26 @@
-plugins {
-  id 'java'
-  id 'java-library'
-  id 'io.spring.dependency-management' version '1.0.10.RELEASE'
-  id 'checkstyle'
-}
-
-ext {
-  projectGroup = 'com.unideb.qsa'
-  projectVersion = project.getProperties().get('release.version') ?: 'RELEASE.VERSION.UNKNOWN'
-  /* Secrets */
-  print('Release version [' + projectVersion + ']')
-}
-
-allprojects {
+subprojects {
 
   apply plugin: 'java'
-  apply plugin: 'java-library'
-  apply plugin: 'io.spring.dependency-management'
   apply plugin: 'checkstyle'
+  apply plugin: 'maven-publish'
 
-  repositories {
-    mavenLocal()
-    mavenCentral()
-    jcenter()
-    maven {
-      url 'https://jitpack.io'
-    }
-  }
-
-  dependencyManagement {
-    dependencies {
-      /* DEPENDENCY */
-      imports {
-        mavenBom 'org.springframework.boot:spring-boot-dependencies:2.4.1'
-      }
-      dependency 'net.logstash.logback:logstash-logback-encoder:6.6'
-      dependency 'io.micrometer:micrometer-registry-prometheus:1.6.2'
-      dependency 'org.slf4j:jcl-over-slf4j:1.7.30'
-      dependency 'org.slf4j:slf4j-api:1.7.30'
-      dependency 'org.springframework:spring-context:5.3.2'
-      dependency 'org.springframework.boot:spring-boot-starter-web:2.4.1'
-      dependency 'org.springframework.boot:spring-boot-starter-actuator:2.4.1'
-      dependency 'com.amazonaws:aws-java-sdk-dynamodb:1.11.933'
-      dependency 'org.mockito:mockito-core:3.6.28'
-      dependency 'org.testng:testng:7.3.0'
-    }
-  }
+  group = 'com.unideb.qsa'
+  version = project.getProperties().get('release.version') ?: 'RELEASE.VERSION.UNKNOWN'
+  sourceCompatibility = '11'
+  targetCompatibility = '11'
 
   checkstyle {
-    toolVersion = '8.38'
-    configFile = file("${rootDir}/support/code-formatting/checkstyle/checkstyle.xml")
-    configDirectory = file("${rootDir}/support/code-formatting/checkstyle/")
+    toolVersion = libs.versions.checkstyle.get()
     showViolations = true
     ignoreFailures = false
   }
 
-  group = projectGroup
-  version = projectVersion
-  sourceCompatibility = '11'
-
-  tasks.withType(JavaCompile) {
+  tasks.withType((Class) JavaCompile) {
     options.encoding = 'UTF-8'
   }
 
-  tasks.withType(Checkstyle) {
-    reports {
-      xml.enabled false
-      html.enabled false
-    }
+  clean {
+    delete "${projectDir}/src/main/.aws-sam/"
   }
 
   test {
@@ -76,8 +29,35 @@ allprojects {
     testLogging {
       afterSuite { desc, result ->
         if (!desc.parent) {
-          println "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} successes, ${result.failedTestCount} failures, ${result.skippedTestCount} skipped)"
+          println "Results: ${result.getResultType()} (${result.getTestCount()} tests, ${result.getSuccessfulTestCount()} successes, ${result.getFailedTestCount()} failures, ${result.getSkippedTestCount()} skipped)"
         }
+      }
+    }
+  }
+
+  if (it.name == 'qsa-i18n-retriever' || it.name == 'qsa-i18n-updater') {
+    task buildZip(type: Zip) {
+      from compileJava
+      from processResources
+      into('lib') {
+        from configurations.runtimeClasspath
+      }
+    }
+  }
+  publishing {
+    repositories {
+      maven {
+        name = 'GitHubPackages'
+        url = uri('https://maven.pkg.github.com/queueing-systems-assistance/qsa-i18n-service')
+        credentials {
+          username = System.getenv('GITHUB_USERNAME') ?: 'YOUR_USERNAME'
+          password = System.getenv('GITHUB_TOKEN') ?: 'YOUR_TOKEN'
+        }
+      }
+    }
+    publications {
+      gpr(MavenPublication) {
+        from(components.java)
       }
     }
   }
