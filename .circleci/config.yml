@@ -22,8 +22,26 @@ commands:
             echo "export BRANCH_NAME=${BRANCH_NAME}" >> "$BASH_ENV"
             echo "export RELEASE_VERSION=${RELEASE_VERSION}" >> "$BASH_ENV"
             mkdir -p envs 
-            echo ${RELEASE_VERSION}" > envs/release-version
+            echo "${RELEASE_VERSION}" > envs/release-version
             chmod +x gradlew
+  deploy:
+    steps:
+      - aws-cli/setup
+      - attach_workspace:
+          at: ./
+      - run:
+          name: Environment Setup
+          command: |
+            RELEASE_VERSION=$(cat envs/release-version)
+            echo "export RELEASE_VERSION=${RELEASE_VERSION}" >> "$BASH_ENV"
+      - run:
+          name: Upload i18n retriever
+          command: |
+            aws lambda update-function-code --region eu-central-1 --function-name qsa-${AWS_ENVIRONMENT}-i18n-retriever --zip-file fileb://qsa-i18n-retriever/build/distributions/qsa-i18n-retriever-${RELEASE_VERSION}.zip
+      - run:
+          name: Upload i18n updater
+          command: |
+            aws lambda update-function-code --region eu-central-1 --function-name qsa-${AWS_ENVIRONMENT}-i18n-updater --zip-file fileb://qsa-i18n-updater/build/distributions/qsa-i18n-updater-${RELEASE_VERSION}.zip
 jobs:
   build:
     environment:
@@ -74,29 +92,22 @@ jobs:
             git config --global user.name "Circle CI"
             git tag -a -f "${RELEASE_VERSION}" -m "${RELEASE_VERSION}"
             git push -f "https://${GITHUB_TOKEN}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}" refs/tags/"${RELEASE_VERSION}"
-  deploy-test:
+  deploy-lab:
     executor: aws-cli/default
+    environment:
+      AWS_ENVIRONMENT: lab
     steps:
-      - aws-cli/install
-      - aws-cli/setup
-      - attach_workspace:
-          at: ./
-      - run:
-          name: Environment Setup
-          command: |
-            RELEASE_VERSION=$(cat /envs/release-version)
-            echo "export RELEASE_VERSION=${RELEASE_VERSION}" >> "$BASH_ENV"
-      - run:
-          name: Upload i18n retriever
-          command: |
-            aws lambda update-function-code --region eu-central-1 --function-name qsa-i18n-retriever --zip-file fileb://./qsa-i18n-retriever/build/distributions/qsa-i18n-retriever-RELEASE.VERSION.UNKNOWN.zip
-      - run:
-          name: Upload i18n updater
-          command: |
-            aws lambda update-function-code --region eu-central-1 --function-name qsa-i18n-updater --zip-file fileb://./qsa-i18n-updater/build/distributions/qsa-i18n-updater-RELEASE.VERSION.UNKNOWN.zip
+      - deploy
+  deploy-prod:
+    executor: aws-cli/default
+    environment:
+      AWS_ENVIRONMENT: prod
+    steps:
+      - deploy
+
 workflows:
   version: 2
-  workflow:
+  default-pipeline:
     jobs:
       - build:
           context:
@@ -111,10 +122,13 @@ workflows:
                 scan_commit_body: true
                 job_type: build
                 token_name: CIRCLE_CI_ARTIFACTS
-      - deploy-test:
+      - deploy-hold-lab:
           requires:
             - build
           type: approval
+      - deploy-lab:
+          requires:
+            - deploy-hold-lab
           context:
             - Secrets
           filters:
@@ -126,5 +140,28 @@ workflows:
             - jira/notify:
                 scan_commit_body: true
                 job_type: deployment
-                environment_type: lab
+                environment_type: staging
+                token_name: CIRCLE_CI_ARTIFACTS
+      - deploy-hold-prod:
+          requires:
+            - deploy-lab
+          type: approval
+          filters:
+            branches:
+              only:
+                - /^master/
+      - deploy-prod:
+          requires:
+            - deploy-hold-prod
+          context:
+            - Secrets
+          filters:
+            branches:
+              only:
+                - /^master/
+          post-steps:
+            - jira/notify:
+                scan_commit_body: true
+                job_type: deployment
+                environment_type: production
                 token_name: CIRCLE_CI_ARTIFACTS

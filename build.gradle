@@ -2,7 +2,6 @@ subprojects {
 
   apply plugin: 'java'
   apply plugin: 'checkstyle'
-  apply plugin: 'maven-publish'
 
   group = 'com.unideb.qsa'
   version = project.getProperties().get('release.version') ?: 'RELEASE.VERSION.UNKNOWN'
@@ -41,23 +40,6 @@ subprojects {
       from processResources
       into('lib') {
         from configurations.runtimeClasspath
-      }
-    }
-  }
-  publishing {
-    repositories {
-      maven {
-        name = 'GitHubPackages'
-        url = uri('https://maven.pkg.github.com/queueing-systems-assistance/qsa-i18n-service')
-        credentials {
-          username = System.getenv('GITHUB_USERNAME') ?: 'YOUR_USERNAME'
-          password = System.getenv('GITHUB_TOKEN') ?: 'YOUR_TOKEN'
-        }
-      }
-    }
-    publications {
-      gpr(MavenPublication) {
-        from(components.java)
       }
     }
   }
